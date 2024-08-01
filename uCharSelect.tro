@@ -1,0 +1,196 @@
+//Karakter seçimi yapılan form.
+var
+SelectForm:tclgameform;
+charImage,infoChar1,infoChar2,showCharImage:TClProImage;
+char1Btn,char2Btn,selectBtn:TClProButton;
+charIndex:Integer;
+charImageCreate:Boolean;
+bestScoreLabel : TclLabel; 
+bestScoreUpdate:TCLButton;
+ 
+void createTable//Eğer ZombieHunt isimli tablo yoksa oluşturulur.  
+  var
+  database, password : String;
+{
+  database = Clomosy.AppFilesPath + 'ZombieHuntDatabase.db3'
+  password = '';
+  
+  try
+    Clomosy.DBSQLiteConnect(database , password);
+    
+    Clomosy.DBSQLiteQuery.Sql.Text = 'CREATE TABLE IF NOT EXISTS ZombieHunt (
+    BestScoreTime INTEGER 
+);';
+    Clomosy.DBSQLiteQuery.OpenOrExecute;
+  except
+   ShowMessage('Exception Class: '+LastExceptionClassName+' Exception Message: '+LastExceptionMessage);
+  }
+}
+
+void SqLiteInsertData;//Eğer ZombieHunt isimli tabloda bestscoretime sütununda hiç kayıt yoksa '0' kaydı eklenir.
+  {
+    try
+      Clomosy.DBSQLiteQuery.Sql.Text = 'INSERT INTO ZombieHunt (bestscoretime)
+                                        SELECT 0
+                                        WHERE NOT EXISTS (SELECT 1 FROM ZombieHunt WHERE bestscoretime IS NOT NULL);'
+      Clomosy.DBSQLiteQuery.OpenOrExecute;
+    except
+     ShowMessage('Exception Class: '+LastExceptionClassName+' Exception Message: '+LastExceptionMessage);
+    }
+  }
+void GetBestScore;//ZombieHunt tablosunda BestScoreTime sütunundaki değer getirilir.
+  var
+    Qry : TClSQLiteQuery;
+    i : Integer;
+  {
+    try
+      Qry = Clomosy.DBSQLiteQueryWith('SELECT BestScoreTime from ZombieHunt');
+      Qry.OpenOrExecute;
+      
+      if (Qry.Found)
+      {
+        bestScoreLabel.Text = 'Your Best Time: '+Qry.FieldByName('BestScoreTime').AsString
+        bestScoreLabel.AutoSize = True;
+        bestScoreLabel.WordWrap = True;
+      }
+      
+    except
+      ShowMessage('Exception class: '+LastExceptionClassName+' Exception Message: ' +LastExceptionMessage);
+    } 
+  }
+
+void selectBtnOnClick//uGame adlı ünite yönlendirilir. GlobalVariableString seçilen karaktere göre değişir.
+var 
+uGame:tclunit;
+{
+  if (charIndex==0)
+  {
+    
+    uGame=tclunit.Create;
+    SelectForm.clShow;
+    Clomosy.GlobalVariableString = 'char1';
+    uGame.UnitName = 'uGame1';
+    uGame.CallerForm = SelectForm;
+    uGame.Run;
+  }
+  else if(charIndex==1)
+  {
+    
+    uGame=tclunit.Create;
+    SelectForm.clShow;
+    Clomosy.GlobalVariableString = 'char2';
+    uGame.UnitName = 'uGame1';
+    uGame.CallerForm = SelectForm;
+    uGame.Run;
+  }
+}
+void char1BtnOnClick//Birinci Karakterin bulunduğu butondur. Basıldığında birinci karakterin görseli gelir.
+{
+  SelectForm.SetImage(charImage,'gJXsc2B.png');
+  charIndex=0;
+}
+void char2BtnOnclick//İkinci Karakterin bulunduğu butondur. Basıldığında İkinci karakterin görseli gelir.
+{
+  SelectForm.SetImage(charImage,'U2IvwXs.png');
+  charIndex=1;
+}
+{
+SelectForm=tclgameform.Create(Self);
+SelectForm.SetFormBGImage('https://i.imgur.com/dYCHleC.png');
+charIndex=0;
+charImageCreate=false;
+
+SelectForm.AddGameAssetFromUrl('https://i.imgur.com/gJXsc2B.png');//Char1
+SelectForm.AddGameAssetFromUrl('https://i.imgur.com/U2IvwXs.png');//Char2
+
+  
+charImage=SelectForm.AddNewProImage(SelectForm, 'charImage');
+clComponent.SetupComponent(charImage,'{
+"margintop":20,
+"Width" :250,
+"Height":250,
+"ImgFit":"yes"
+}');
+charImage.RotationAngle=90;
+SelectForm.SetImage(charImage,'gJXsc2B.png');
+
+
+
+char1Btn = SelectForm.AddNewProButton(SelectForm,'char1Btn','');
+clComponent.SetupComponent(char1Btn,'{
+"MarginLeft":300,
+"MarginBottom":650,
+"Width" :75,
+"Height":75,
+"RoundHeight":10,
+"RoundWidth":10,
+"BorderColor":"#000000",
+"BorderWidth":2,
+"backgroundcolor":"#a88a8a",
+"ImgUrl":"https://i.imgur.com/VH9IwGw.png",
+"ImgFit":"yes"
+}');
+char1Btn.RotationAngle=90;
+
+char2Btn = SelectForm.AddNewProButton(SelectForm,'char2Btn','');
+clComponent.SetupComponent(char2Btn,'{
+"MarginLeft":300,
+"MarginBottom":450,
+"Width" :75,
+"Height":75,
+"RoundHeight":10,
+"RoundWidth":10,
+"BorderColor":"#000000",
+"BorderWidth":2,
+"backgroundcolor":"#a88a8a",
+"ImgUrl":"https://i.imgur.com/Yhw2UPu.png",
+"ImgFit":"yes"
+}');
+char2Btn.RotationAngle=90;
+
+selectBtn = SelectForm.AddNewProButton(SelectForm,'selectBtn','');
+clComponent.SetupComponent(selectBtn,'{
+"MarginRight":300,
+"MarginTop":500,
+"Width" :200,
+"Height":200,
+"ImgUrl":"https://i.imgur.com/OzNIdwd.png",
+"ImgFit":"yes"
+}');
+selectBtn.RotationAngle=90;
+
+bestScoreUpdate = SelectForm.AddNewProButton(SelectForm,'bestScoreUpdate','');
+clComponent.SetupComponent(bestScoreUpdate,'{
+"MarginLeft":300,
+"MarginTop":700,
+"Width" :50,
+"Height":50,
+"ImgUrl":"https://i.imgur.com/VTOSDRf.png",
+"ImgFit":"yes"
+}');
+bestScoreUpdate.RotationAngle=90;
+
+bestScoreLabel = SelectForm.AddNewLabel(SelectForm,'bestScoreLabel','merhaba');
+bestScoreLabel.StyledSettings = ssFamily;
+bestScoreLabel.TextSettings.Font.Size=20;
+bestScoreLabel.Align = alNone;
+bestScoreLabel.Position.X= SelectForm.clwidth*7/10;
+bestScoreLabel.Position.Y= SelectForm.clHeight*9/10;
+bestScoreLabel.Height = 100;
+bestScoreLabel.TextSettings.FontColor = clAlphaColor.clHexToColor('#FFFFFF');
+bestScoreLabel.RotationAngle=90;
+
+
+
+//SelectForm.AddNewEvent(char1Btn,tbeOnClick,'uCharSelect.char1BtnOnClick');
+char1Btn.onClick='char1BtnOnClick';
+//SelectForm.AddNewEvent(char2Btn,tbeOnClick,'uCharSelect.char2BtnOnclick');
+char2Btn.onClick='char2BtnOnclick';
+//SelectForm.AddNewEvent(selectBtn,tbeOnClick,'uCharSelect.selectBtnOnClick');
+selectBtn.onClick='selectBtnOnClick';
+createTable;
+SqLiteInsertData
+GetBestScore;
+bestScoreUpdate.onClick='GetBestScore';
+SelectForm.Run;
+}
