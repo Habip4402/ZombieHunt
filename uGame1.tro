@@ -1,0 +1,723 @@
+//Oyun oynanılan form.
+var 
+  MyGameForm:tclgameform;
+  propPlayerChar,propZombieChar1,propZombieChar2,propZombieChar3,propZombieChar4,propZombieChar5,propZombieChar6,propZombieChar7,propZombieChar8,propZombieChar9,propZombieChar10:TclRectangle;
+  proGun,proBullet,backGroundImage,zombieDied,playerDied,healthImage,endImage:TClProImage;
+  animPlayerChar,animZombieChar1,animZombieChar2,animZombieChar3,animZombieChar4,animZombieChar5,animZombieChar6,animZombieChar7,animZombieChar8,animZombieChar9,animZombieChar10:TclBitmapListAnimation;
+  leftMoveButton:TClProButton;
+  moveTimer,bulletTimer,bulletRotationTimer,endGameTimer,gameTimer:TCLTimer;
+  circle1,circle2: TclCircle;
+  bulletTimeCounter:Integer;
+  distance1,distance2,distance3,distance4,distance5,distance6,distance7,distance8,distance9,distance10,distanceMin:double;
+  angle:double;
+  damageCounter:Integer;
+  uCharSelect:tclunit;
+  labelPosition:tcllabel;
+  zombieSpeed:Integer;
+  lblGameTimer:TClProLabel;
+  duration,dk,sn:Integer
+  i:Integer;
+  miniMap,playerIcon:TClProImage;
+  void UpdateBestScore;//Mevcut zaman değeri ZombieHunt tablosundaki bestscoretime değerinden büyük ise bestscoretime değeri mevcut zaman değeri ile değştirilir.
+{
+  try
+    Clomosy.DBSQLiteQuery.SQL.Text = 'UPDATE ZombieHunt
+                          SET bestscoretime = '+QuotedStr(IntToStr(duration))+'
+                          WHERE bestscoretime < '+QuotedStr(IntToStr(duration))+';'
+    Clomosy.DBSQLiteQuery.OpenOrExecute;
+  except
+    ShowMessage('Exception class: '+LastExceptionClassName+' Exception Message: ' +LastExceptionMessage);
+  } 
+}
+void timerShow
+{
+  //Duration değeri saniyede bir artar ve zaman olarak ele alınır.
+  Inc(duration);
+  lblGameTimer.Caption ='Time: '+ IntToStr(duration);
+}
+  void selectedChar
+  {
+//uCharSelect unitinde seçilen karaktere göre karakter özellikleri silah özellikleri belirlenir. 
+//Bu ayrımı yapabilmek için GlobalVariableString kullanılmıştır.
+    if (Clomosy.GlobalVariableString == 'char1')
+    {
+      animPlayerChar = MyGameForm.AddNewBitmapListAnimation(propPlayerChar,'animPlayerChar');
+      animPlayerChar.AnimationBitmap.LoadFromFile(clomosy.appfilespath + 'vYu9ty9.png');
+      animPlayerChar.AnimationCount = 6;
+      animPlayerChar.AnimationRowCount = 1;
+      animPlayerChar.Delay = 0;
+      animPlayerChar.Duration = 0.75;
+      //animPlayerChar.AutoReverse = True;
+      animPlayerChar.Enabled = True;
+      animPlayerChar.Loop = True;
+      animPlayerChar.Start;
+      
+      
+      MyGameForm.SetImage(proGun,'kMkZm2Z.png');
+    }
+    else if(Clomosy.GlobalVariableString == 'char2')
+    {
+      animPlayerChar = MyGameForm.AddNewBitmapListAnimation(propPlayerChar,'animPlayerChar');
+      animPlayerChar.AnimationBitmap.LoadFromFile(clomosy.appfilespath + 'LkoQ9qv.png');
+      animPlayerChar.AnimationCount = 6;
+      animPlayerChar.AnimationRowCount = 1;
+      animPlayerChar.Delay = 0;
+      animPlayerChar.Duration = 0.75;
+      //animPlayerChar.AutoReverse = True;
+      animPlayerChar.Enabled = True;
+      animPlayerChar.Loop = True;
+      animPlayerChar.Start;
+      
+      
+      MyGameForm.SetImage(proGun,'2WegHrj.png');
+      MyGameForm.SetImage(playerIcon,'5nKyFHx.png');
+      proGun.Width=49;
+      proGun.Height=18;
+      proGun.RotationAngle=90;
+      proGun.Position.X=propPlayerChar.Position.X+32;
+      proGun.Position.Y=propPlayerChar.Position.Y+52;
+    }
+  }
+  
+  void onFormMouseMove; 
+{ 
+  //Bu kısımda circle2, yani joystick konumuna göre zombilerin, arkaplanın ve mini haritadaki ikonun hareketi kontrol edilir.
+  //Örneğin eğer joystick konumu sağ taraftaysa zombilerin pozisyonu sol tarafa doğru eksiltilir. Çünkü karakter hareket etmemektedir.
+  // Arkaplan da aynı şekilde hareket ettirilmektedir. Bu sayede karakter hareket ediyormuş gibi gözükmektedir. Mini haritadaki karakter ikonu
+  //joystick konumu ile doğru olarak hareket etmektedir. Çünkü joystick konumu karakter gidiş yönünü temsil etmektedir.
+  //propZombieChar6 ve sonrası zamana göre oluşturulup hareket edeceği için duration değerine göre hareketleri ayarlanmıştır.
+  if(circle2.Position.X==(circle1.Position.X+30))
+  {
+  }
+  else
+  {
+    
+    if(circle2.Position.X>circle1.Position.X+circle1.Height/2)
+    { 
+      if(backGroundImage.Position.X>(mygameform.clwidth/2-backGroundImage.Height)-backGroundImage.Height/2)
+      {
+        propZombieChar1.Position.X=propZombieChar1.Position.X-3;
+        propZombieChar2.Position.X=propZombieChar2.Position.X-3;
+        propZombieChar3.Position.X=propZombieChar3.Position.X-3;
+        propZombieChar4.Position.X=propZombieChar4.Position.X-3;
+        propZombieChar5.Position.X=propZombieChar5.Position.X-3;
+        if(duration>10)
+          propZombieChar6.Position.X=propZombieChar6.Position.X-3;
+        if(duration>20)
+          propZombieChar7.Position.X=propZombieChar7.Position.X-3;
+        if(duration>30)
+          propZombieChar8.Position.X=propZombieChar8.Position.X-3;
+        if(duration>40)
+          propZombieChar9.Position.X=propZombieChar9.Position.X-3;
+        if(duration>50)
+          propZombieChar10.Position.X=propZombieChar10.Position.X-3;
+        zombieDied.Position.X=zombieDied.Position.X-3;
+        backGroundImage.Position.X=backGroundImage.Position.X-3;
+        playerIcon.Position.X=playerIcon.Position.X+3/20;
+      } 
+    }
+    else if (circle2.Position.X10)
+          propZombieChar6.Position.X=propZombieChar6.Position.X+3;
+        if(duration>20)
+          propZombieChar7.Position.X=propZombieChar7.Position.X+3;
+        if(duration>30)
+          propZombieChar8.Position.X=propZombieChar8.Position.X+3;
+        if(duration>40)
+          propZombieChar9.Position.X=propZombieChar9.Position.X+3;
+        if(duration>50)
+          propZombieChar10.Position.X=propZombieChar10.Position.X+3;
+        zombieDied.Position.X=zombieDied.Position.X+3;
+        backGroundImage.Position.X=backGroundImage.Position.X+3;
+        playerIcon.Position.X=playerIcon.Position.X-3/20;
+      }
+    }
+    
+    
+    if(circle2.Position.Y>circle1.Position.Y+circle1.Width/2)
+    {
+      if(backGroundImage.Position.Y>(-mygameform.clHeight-backGroundImage.Width/2-propPlayerChar.Height))
+      {
+        propZombieChar1.Position.Y=propZombieChar1.Position.Y-3;
+        propZombieChar2.Position.Y=propZombieChar2.Position.Y-3;
+        propZombieChar3.Position.Y=propZombieChar3.Position.Y-3;
+        propZombieChar4.Position.Y=propZombieChar4.Position.Y-3;
+        propZombieChar5.Position.Y=propZombieChar5.Position.Y-3;
+        if(duration>10)
+          propZombieChar6.Position.Y=propZombieChar6.Position.Y-3;
+        if(duration>20)
+          propZombieChar7.Position.Y=propZombieChar7.Position.Y-3;
+        if(duration>30)
+          propZombieChar8.Position.Y=propZombieChar8.Position.Y-3;
+        if(duration>40)
+          propZombieChar9.Position.Y=propZombieChar9.Position.Y-3;
+        if(duration>50)
+          propZombieChar10.Position.Y=propZombieChar10.Position.Y-3;
+        zombieDied.Position.Y=zombieDied.Position.Y-3;
+        backGroundImage.Position.Y=backGroundImage.Position.Y-3;
+        playerIcon.Position.Y=playerIcon.Position.Y+3/20;
+      }
+    }
+    else if (circle2.Position.Y10)
+          propZombieChar6.Position.Y=propZombieChar6.Position.Y+3;
+        if(duration>20)
+          propZombieChar7.Position.Y=propZombieChar7.Position.Y+3;
+        if(duration>30)
+          propZombieChar8.Position.Y=propZombieChar8.Position.Y+3;
+        if(duration>40)
+          propZombieChar9.Position.Y=propZombieChar9.Position.Y+3;
+        if(duration>50)
+          propZombieChar10.Position.Y=propZombieChar10.Position.Y+3;
+        zombieDied.Position.Y=zombieDied.Position.Y+3;
+        backGroundImage.Position.Y=backGroundImage.Position.Y+3;
+        playerIcon.Position.Y=playerIcon.Position.Y-3/20;
+      }  
+    }
+    
+  }
+  
+  //Bu kısımda onMouseMove özelliği kullanılarak formda basılan konuma göre joystick hareketi kontrol edilmektedir.
+  //Örneğin eğer formda basılan noktanın X değeri joystcik'in X değerinden büyükse joystcik'in X pozisyonu arttırılır.
+  if(circle2.Position.XMyGameForm.clFormMousePosX)
+  {
+    if(MyGameForm.clFormMousePosX>0)
+    {
+      if(circle2.Position.X>circle1.Position.X)
+      {
+        circle2.visible=true;
+        circle2.Position.X=circle2.Position.X-3
+      }
+    }
+  }
+  if(circle2.Position.YMyGameForm.clFormMousePosY)
+  {
+    if(MyGameForm.clFormMousePosY>0)
+    {
+      if(circle2.Position.Y>circle1.Position.Y)
+      { 
+        circle2.visible=true;
+        circle2.Position.Y=circle2.Position.Y-3
+      }
+    }
+  }
+  if(MyGameForm.clFormMousePosX<0)
+  {
+    circle2.Position.X=circle1.Position.X+30;
+    circle2.Position.Y=circle1.Position.Y+30;
+    circle2.visible=false;
+  }
+  
+}
+void zombieDieImage(zombiDieProp:TClProImage);
+ {
+  //Zombiler öldüğü zaman 4 farklı resimden rastgele biri öldüğü konuma gelir.
+  case (clMath.GenerateRandom(0,4)) of
+  {
+    0:
+    {
+      MyGameForm.SetImage(zombiDieProp,'p2tePFL.png');
+      zombiDieProp.RotationAngle=90;
+    }
+    1:
+    {
+      MyGameForm.SetImage(zombiDieProp,'vs4n5Fw.png');
+      zombiDieProp.RotationAngle=90;
+    }
+    2:
+    {
+      MyGameForm.SetImage(zombiDieProp,'psBvp0L.png');
+      zombiDieProp.RotationAngle=90;
+    }
+    3:
+    {
+      MyGameForm.SetImage(zombiDieProp,'1VyrIeA.png');
+      zombiDieProp.RotationAngle=90;
+    }
+  }
+}
+
+void SetRndPropPosition(AProp:TclRectangle);
+{
+//Ölen zombiler öldükten sonra rastgele konumlara ışınlanır.
+  case (clMath.GenerateRandom(0,4)) of
+  {
+    0:
+    {
+      AProp.Position.X=400+Random()*100;
+      AProp.Position.y=500+Random()*100;
+      AProp.Visible = True;
+      AProp.RotationAngle = 90;
+    }
+    1:
+    {
+      AProp.Position.X=-100-Random()*100;
+      AProp.Position.y=-100-Random()*100;
+      AProp.Visible = True;
+      AProp.RotationAngle = 90;
+    }
+    2:
+    {
+      AProp.Position.X=-100-Random()*100;
+      AProp.Position.y=500+Random()*100;
+      AProp.Visible = True;
+      AProp.RotationAngle = 90;
+    }
+    3:
+    {
+      AProp.Position.X=400+Random()*100;
+      AProp.Position.y=-100-Random()*100;
+      AProp.Visible = True;
+      AProp.RotationAngle = 90;
+    }
+    
+  }
+}
+
+void zombieDie
+{
+//Zombi ölüm resmi zombinin öldüğü konumda belirir. Zombi rastgele bir konuma ışınlanır.
+//Mermi ilk konumuna getirilir ve mermi hareket zamanı durdurulur. 
+  if (MyGameForm.clIsIntersectsWith(proBullet, propZombieChar1)) 
+  {
+    zombieDied.Position.X=propZombieChar1.Position.X;
+    zombieDied.Position.Y=propZombieChar1.Position.Y;
+    zombieDieImage(zombieDied);
+    zombieDied.visible=true;
+    SetRndPropPosition(propZombieChar1);
+    
+    proBullet.Position.X=proGun.Position.X+25;
+    proBullet.Position.Y=proGun.Position.Y+30;
+    bulletTimer.Enabled=false;
+    
+  }
+  if (MyGameForm.clIsIntersectsWith(proBullet, propZombieChar2)) 
+  {
+    zombieDied.Position.X=propZombieChar2.Position.X;
+    zombieDied.Position.Y=propZombieChar2.Position.Y;
+    zombieDieImage(zombieDied);
+    zombieDied.visible=true;
+    SetRndPropPosition(propZombieChar2);
+    
+    proBullet.Position.X=proGun.Position.X+25;
+    proBullet.Position.Y=proGun.Position.Y+30;
+    bulletTimer.Enabled=false;
+    
+  } 
+  if (MyGameForm.clIsIntersectsWith(proBullet, propZombieChar3)) 
+  {
+    zombieDied.Position.X=propZombieChar3.Position.X;
+    zombieDied.Position.Y=propZombieChar3.Position.Y;
+    zombieDieImage(zombieDied);
+    zombieDied.visible=true;
+    SetRndPropPosition(propZombieChar3);
+    
+    proBullet.Position.X=proGun.Position.X+25;
+    proBullet.Position.Y=proGun.Position.Y+30;
+    bulletTimer.Enabled=false;
+    
+  } 
+  if (MyGameForm.clIsIntersectsWith(proBullet, propZombieChar4)) 
+  {
+    zombieDied.Position.X=propZombieChar4.Position.X;
+    zombieDied.Position.Y=propZombieChar4.Position.Y;
+    zombieDieImage(zombieDied);
+    zombieDied.visible=true;
+    SetRndPropPosition(propZombieChar4);
+    
+    proBullet.Position.X=proGun.Position.X+25;
+    proBullet.Position.Y=proGun.Position.Y+30;
+    bulletTimer.Enabled=false;
+    
+  } 
+  if (MyGameForm.clIsIntersectsWith(proBullet, propZombieChar5)) 
+  {
+    zombieDied.Position.X=propZombieChar5.Position.X;
+    zombieDied.Position.Y=propZombieChar5.Position.Y;
+    zombieDieImage(zombieDied);
+    zombieDied.visible=true;
+    SetRndPropPosition(propZombieChar5);
+    
+    proBullet.Position.X=proGun.Position.X+25;
+    proBullet.Position.Y=proGun.Position.Y+30;
+    bulletTimer.Enabled=false;
+    
+  } 
+  if (MyGameForm.clIsIntersectsWith(proBullet, propZombieChar6)) 
+  {
+    zombieDied.Position.X=propZombieChar6.Position.X;
+    zombieDied.Position.Y=propZombieChar6.Position.Y;
+    zombieDieImage(zombieDied);
+    zombieDied.visible=true;
+    SetRndPropPosition(propZombieChar6);
+    
+    proBullet.Position.X=proGun.Position.X+25;
+    proBullet.Position.Y=proGun.Position.Y+30;
+    bulletTimer.Enabled=false;
+    
+  }
+  if (MyGameForm.clIsIntersectsWith(proBullet, propZombieChar7)) 
+  {
+    zombieDied.Position.X=propZombieChar7.Position.X;
+    zombieDied.Position.Y=propZombieChar7.Position.Y;
+    zombieDieImage(zombieDied);
+    zombieDied.visible=true;
+    SetRndPropPosition(propZombieChar7);
+    
+    proBullet.Position.X=proGun.Position.X+25;
+    proBullet.Position.Y=proGun.Position.Y+30;
+    bulletTimer.Enabled=false;
+    
+  } 
+  if (MyGameForm.clIsIntersectsWith(proBullet, propZombieChar8)) 
+  {
+    zombieDied.Position.X=propZombieChar8.Position.X;
+    zombieDied.Position.Y=propZombieChar8.Position.Y;
+    zombieDieImage(zombieDied);
+    zombieDied.visible=true;
+    SetRndPropPosition(propZombieChar8);
+    
+    proBullet.Position.X=proGun.Position.X+25;
+    proBullet.Position.Y=proGun.Position.Y+30;
+    bulletTimer.Enabled=false;
+    
+  } 
+  if (MyGameForm.clIsIntersectsWith(proBullet, propZombieChar9)) 
+  {
+    zombieDied.Position.X=propZombieChar9.Position.X;
+    zombieDied.Position.Y=propZombieChar9.Position.Y;
+    zombieDieImage(zombieDied);
+    zombieDied.visible=true;
+    SetRndPropPosition(propZombieChar9);
+    
+    proBullet.Position.X=proGun.Position.X+25;
+    proBullet.Position.Y=proGun.Position.Y+30;
+    bulletTimer.Enabled=false;
+  } 
+  if (MyGameForm.clIsIntersectsWith(proBullet, propZombieChar10)) 
+  {
+    zombieDied.Position.X=propZombieChar10.Position.X;
+    zombieDied.Position.Y=propZombieChar10.Position.Y;
+    zombieDieImage(zombieDied);
+    zombieDied.visible=true;
+    SetRndPropPosition(propZombieChar10);
+    
+    proBullet.Position.X=proGun.Position.X+25;
+    proBullet.Position.Y=proGun.Position.Y+30;
+    bulletTimer.Enabled=false;
+    
+  } 
+}
+void endGame
+{
+//Karakter öldüğü zaman karakterin görseli ölü karakter görseliyle değiştirilir.'Öldün' yazısı görünürr hale gelir. 
+//endGameTimer 5 saniye olarak ayarlanır. Diğer bütün timerlar kapanır. bestscoretime güncellenir. 
+//5 saniye sonunda oyun formu kapanır ve karakter seçim ekranına dönülür.
+if(endGameTimer.Interval==1){
+  endGameTimer.Interval=5000;
+  endImage.visible=true;
+  gameTimer.Enabled=false;
+  bulletRotationTimer.Enabled=false;
+  moveTimer.Enabled=false;
+  bulletTimer.Enabled=false;
+  animPlayerChar.AnimationBitmap.LoadFromFile(clomosy.appfilespath + 'ggWW619.png');
+  animPlayerChar.AnimationCount = 1;
+  animPlayerChar.AnimationRowCount = 1;
+  proGun.visible=false;
+  proBullet.visible=false;
+  clRTMethod(endImage, 'BringToFront'); 
+  UpdateBestScore;
+  }
+  else
+  {
+    MyGameForm.clHide;
+    endGameTimer.Enabled=false;
+  }
+}
+void healthChange
+{
+  //Karakterimiz zombilerle temas ettiğinde damageCounter değeri artar. damageCounter değerine göre de healthImage görseli değiştirilir.
+  //damageCounter değeri 6 ya da 6 dan büyük olunca karakter öldü sayılır ve endGameTimer etkinleştirilir.
+  if (MyGameForm.clIsIntersectsWith(propPlayerChar, propZombieChar1)) 
+  {
+    damageCounter=damageCounter+1;
+  }
+  if (MyGameForm.clIsIntersectsWith(propPlayerChar, propZombieChar2)) 
+  {
+    damageCounter=damageCounter+1;
+  }
+  if (MyGameForm.clIsIntersectsWith(propPlayerChar, propZombieChar3)) 
+  {
+    damageCounter=damageCounter+1;
+  }
+  if (MyGameForm.clIsIntersectsWith(propPlayerChar, propZombieChar4)) 
+  {
+    damageCounter=damageCounter+1;
+  }
+  if (MyGameForm.clIsIntersectsWith(propPlayerChar, propZombieChar5)) 
+  {
+    damageCounter=damageCounter+1;
+  }
+  if (MyGameForm.clIsIntersectsWith(propPlayerChar, propZombieChar6)) 
+  {
+    damageCounter=damageCounter+1;
+  }
+  if (MyGameForm.clIsIntersectsWith(propPlayerChar, propZombieChar7)) 
+  {
+    damageCounter=damageCounter+1;
+  }
+  if (MyGameForm.clIsIntersectsWith(propPlayerChar, propZombieChar8)) 
+  {
+    damageCounter=damageCounter+1;
+  }
+  if (MyGameForm.clIsIntersectsWith(propPlayerChar, propZombieChar9)) 
+  {
+    damageCounter=damageCounter+1;
+  }
+  if (MyGameForm.clIsIntersectsWith(propPlayerChar, propZombieChar10)) 
+  {
+    damageCounter=damageCounter+1;
+  }
+  
+  if(damageCounter==1)
+  {
+    MyGameForm.SetImage(healthImage,'https://i.imgur.com/U9lEs6s.png');
+  }
+  else if(damageCounter==2)
+  {
+    MyGameForm.SetImage(healthImage,'https://i.imgur.com/fqEvIno.png');
+  }
+  else if(damageCounter==3)
+  {
+    MyGameForm.SetImage(healthImage,'https://i.imgur.com/3EFQnK2.png');
+  }
+  else if(damageCounter==4)
+  {
+    MyGameForm.SetImage(healthImage,'https://i.imgur.com/1IiFAgX.png');
+  }
+  else if(damageCounter==5)
+  {
+    MyGameForm.SetImage(healthImage,'https://i.imgur.com/oFbWiSp.png');
+  }
+  else if(damageCounter>5)
+  {
+    MyGameForm.SetImage(healthImage,'https://i.imgur.com/QCrDdrT.png');
+    endGameTimer.Enabled=true;
+  }
+  
+}
+void gunBulletRotation
+{
+  proBullet.visible=true;
+  //Bu kısımda iki nokta arasındaki uzaklık fonksiyonu kullanılarak karakterin bütün zombilerle arasındaki uzaklık hesaplanır.
+  distance1=sqrt(sqr(propPlayerChar.Position.X-propZombieChar1.Position.X)+sqr(propPlayerChar.Position.Y-propZombieChar1.Position.Y))
+  distance2=sqrt(sqr(propPlayerChar.Position.X-propZombieChar2.Position.X)+sqr(propPlayerChar.Position.Y-propZombieChar2.Position.Y))
+  distance3=sqrt(sqr(propPlayerChar.Position.X-propZombieChar3.Position.X)+sqr(propPlayerChar.Position.Y-propZombieChar3.Position.Y))
+  distance4=sqrt(sqr(propPlayerChar.Position.X-propZombieChar4.Position.X)+sqr(propPlayerChar.Position.Y-propZombieChar4.Position.Y))
+  distance5=sqrt(sqr(propPlayerChar.Position.X-propZombieChar5.Position.X)+sqr(propPlayerChar.Position.Y-propZombieChar5.Position.Y)) 
+  distance6=sqrt(sqr(propPlayerChar.Position.X-propZombieChar6.Position.X)+sqr(propPlayerChar.Position.Y-propZombieChar6.Position.Y))
+  distance7=sqrt(sqr(propPlayerChar.Position.X-propZombieChar7.Position.X)+sqr(propPlayerChar.Position.Y-propZombieChar7.Position.Y))
+  distance8=sqrt(sqr(propPlayerChar.Position.X-propZombieChar8.Position.X)+sqr(propPlayerChar.Position.Y-propZombieChar8.Position.Y))
+  distance9=sqrt(sqr(propPlayerChar.Position.X-propZombieChar9.Position.X)+sqr(propPlayerChar.Position.Y-propZombieChar9.Position.Y))
+  distance10=sqrt(sqr(propPlayerChar.Position.X-propZombieChar10.Position.X)+sqr(propPlayerChar.Position.Y-propZombieChar10.Position.Y))
+  bulletTimer.Enabled=false;
+  distanceMin=distance1;
+  //Hesaplanan uzaklıklar birbiriyle kıyaslanır ve en küçük olan bulunur çünü karakterin en yakındaki zombiye ateş etmesi istenmektedir.
+  if(distance2300)
+    {
+      
+    }
+    else
+    {
+      angle=(propPlayerChar.Position.Y-propZombieChar1.Position.Y)/(propPlayerChar.Position.X-propZombieChar1.Position.X);
+      if(propPlayerChar.Position.Y300)
+    {
+      
+    }
+    else
+    {
+      angle=(propPlayerChar.Position.Y-propZombieChar3.Position.Y)/(propPlayerChar.Position.X-propZombieChar3.Position.X);
+      if(propPlayerChar.Position.Y300)
+    {
+      
+    }
+    else 
+    { 
+      
+      proBullet.visible=true;
+      if(proBullet.Position.X>propZombieChar1.Position.X+50)
+      {
+      proBullet.Position.X=proBullet.Position.X-10;
+      }
+      else if(proBullet.Position.XpropZombieChar1.Position.Y+50)
+      {
+        proBullet.Position.Y=proBullet.Position.Y-10;
+      }
+      else if(proBullet.Position.YpropZombieChar2.Position.X+50)
+      {
+        proBullet.Position.X=proBullet.Position.X-10;
+      }
+      else if(proBullet.Position.XpropZombieChar2.Position.Y+50)
+      {
+        proBullet.Position.Y=proBullet.Position.Y-10;
+      }
+      else if(proBullet.Position.Y300)
+    {
+      
+    }
+    else
+    {
+      proBullet.visible=true;
+      if(proBullet.Position.X>propZombieChar3.Position.X+50)
+      {
+        proBullet.Position.X=proBullet.Position.X-10;
+      }
+      else if(proBullet.Position.XpropZombieChar3.Position.Y+50)
+      {
+        proBullet.Position.Y=proBullet.Position.Y-10;
+      }
+      else if(proBullet.Position.YpropZombieChar4.Position.X+50)
+      {
+        proBullet.Position.X=proBullet.Position.X-10;
+      }
+      else if(proBullet.Position.XpropZombieChar4.Position.Y+50)
+      {
+        proBullet.Position.Y=proBullet.Position.Y-10;
+      }
+      else if(proBullet.Position.YpropZombieChar5.Position.X+50)
+      {
+        proBullet.Position.X=proBullet.Position.X-10;
+      }
+      else if(proBullet.Position.XpropZombieChar5.Position.Y+50)
+      {
+        proBullet.Position.Y=proBullet.Position.Y-10;
+      }
+      else if(proBullet.Position.YpropZombieChar6.Position.X+50)
+      {
+        proBullet.Position.X=proBullet.Position.X-10;
+      }
+      else if(proBullet.Position.XpropZombieChar6.Position.Y+50)
+      {
+        proBullet.Position.Y=proBullet.Position.Y-10;
+      }
+      else if(proBullet.Position.YpropZombieChar7.Position.X+50)
+      {
+        proBullet.Position.X=proBullet.Position.X-10;
+      }
+      else if(proBullet.Position.XpropZombieChar7.Position.Y+50)
+      {
+        proBullet.Position.Y=proBullet.Position.Y-10;
+      }
+      else if(proBullet.Position.YpropZombieChar8.Position.X+50)
+      {
+        proBullet.Position.X=proBullet.Position.X-10;
+      }
+      else if(proBullet.Position.XpropZombieChar8.Position.Y+50)
+      {
+        proBullet.Position.Y=proBullet.Position.Y-10;
+      }
+      else if(proBullet.Position.YpropZombieChar9.Position.X+50)
+      {
+        proBullet.Position.X=proBullet.Position.X-10;
+      }
+      else if(proBullet.Position.XpropZombieChar9.Position.Y+50)
+      {
+        proBullet.Position.Y=proBullet.Position.Y-10;
+      }
+      else if(proBullet.Position.YpropZombieChar10.Position.X+50)
+      {
+        proBullet.Position.X=proBullet.Position.X-10;
+      }
+      else if(proBullet.Position.XpropZombieChar10.Position.Y+50)
+      {
+        proBullet.Position.Y=proBullet.Position.Y-10;
+      }
+      else if(proBullet.Position.YpropPlayerChar.Position.X)
+    {
+      propZombieChar1.Position.X=propZombieChar1.Position.X-zombieSpeed;
+    }
+    else if(propZombieChar1.Position.XpropPlayerChar.Position.Y)
+    {
+      propZombieChar1.Position.Y=propZombieChar1.Position.Y-zombieSpeed;
+    }
+    else if(propZombieChar1.Position.YpropPlayerChar.Position.X)
+    {
+      propZombieChar2.Position.X=propZombieChar2.Position.X-zombieSpeed;
+    }
+    else if(propZombieChar2.Position.XpropPlayerChar.Position.Y)
+    {
+      propZombieChar2.Position.Y=propZombieChar2.Position.Y-zombieSpeed;
+    }
+    else if(propZombieChar2.Position.YpropPlayerChar.Position.X)
+    {
+      propZombieChar3.Position.X=propZombieChar3.Position.X-zombieSpeed;
+    }
+    else if(propZombieChar3.Position.XpropPlayerChar.Position.Y)
+    {
+      propZombieChar3.Position.Y=propZombieChar3.Position.Y-zombieSpeed;
+    }
+    else if(propZombieChar3.Position.YpropPlayerChar.Position.X)
+    {
+      propZombieChar4.Position.X=propZombieChar4.Position.X-zombieSpeed;
+    }
+    else if(propZombieChar4.Position.XpropPlayerChar.Position.Y)
+    {
+      propZombieChar4.Position.Y=propZombieChar4.Position.Y-zombieSpeed;
+    }
+    else if(propZombieChar4.Position.YpropPlayerChar.Position.X)
+    {
+      propZombieChar5.Position.X=propZombieChar5.Position.X-zombieSpeed;
+    }
+    else if(propZombieChar5.Position.XpropPlayerChar.Position.Y)
+    {
+      propZombieChar5.Position.Y=propZombieChar5.Position.Y-zombieSpeed;
+    }
+    else if(propZombieChar5.Position.Y10)
+    {
+      if(propZombieChar6.Position.X>propPlayerChar.Position.X)
+      {
+        propZombieChar6.Position.X=propZombieChar6.Position.X-zombieSpeed;
+      }
+      else if(propZombieChar6.Position.XpropPlayerChar.Position.Y)
+      {
+        propZombieChar6.Position.Y=propZombieChar6.Position.Y-zombieSpeed;
+      }
+      else if(propZombieChar6.Position.Y20)
+    {
+      if(propZombieChar7.Position.X>propPlayerChar.Position.X)
+      {
+        propZombieChar7.Position.X=propZombieChar7.Position.X-zombieSpeed;
+      }
+      else if(propZombieChar7.Position.XpropPlayerChar.Position.Y)
+      {
+        propZombieChar7.Position.Y=propZombieChar7.Position.Y-zombieSpeed;
+      }
+      else if(propZombieChar7.Position.Y30)
+    {
+      if(propZombieChar8.Position.X>propPlayerChar.Position.X)
+      {
+        propZombieChar8.Position.X=propZombieChar8.Position.X-zombieSpeed;
+      }
+      else if(propZombieChar8.Position.XpropPlayerChar.Position.Y)
+      {
+        propZombieChar8.Position.Y=propZombieChar8.Position.Y-zombieSpeed;
+      }
+      else if(propZombieChar8.Position.Y40)
+    {
+      if(propZombieChar9.Position.X>propPlayerChar.Position.X)
+      {
+        propZombieChar9.Position.X=propZombieChar9.Position.X-zombieSpeed;
+      }
+      else if(propZombieChar9.Position.XpropPlayerChar.Position.Y)
+      {
+        propZombieChar9.Position.Y=propZombieChar9.Position.Y-zombieSpeed;
+      }
+      else if(propZombieChar9.Position.Y50)
+    {
+      if(propZombieChar10.Position.X>propPlayerChar.Position.X)
+      {
+        propZombieChar10.Position.X=propZombieChar10.Position.X-zombieSpeed;
+      }
+      else if(propZombieChar10.Position.XpropPlayerChar.Position.Y)
+      {
+        propZombieChar10.Position.Y=propZombieChar10.Position.Y-zombieSpeed;
+      }
+      else if(propZombieChar10.Position.Y
